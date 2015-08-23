@@ -27,10 +27,13 @@ namespace OBJ2MAP
     {
         MainForm progForm;
 
+		public enum EFieldNames { MapOutput, BrushMethod, CopyToClipboard, Depth, Scale, DecimalPlaces, Class, VisibleTexture, HiddenTexture, AxisAligned };
+
         public SceneSettings(MainForm form)
         {
             progForm = form;
         }
+
         public bool SettingsSave(
             string output,
             MainForm.EConvOption econvOption,
@@ -70,38 +73,36 @@ namespace OBJ2MAP
             loadFile = XElement.Load(Path.Combine(Path.GetDirectoryName(text1), Path.GetFileNameWithoutExtension(text1) + ".xml"));
         }
 
-        public string SettingsLoad(int mode)
+		public string SettingsLoad(EFieldNames mode)
         {
-            if (loadFile != null)
-            {
-                switch (mode)
-                {
-                    case 0:
-                        return loadFile.Element("MAPOutput").Value;
-                    case 1:
-                        return loadFile.Element("BrushMethod").Value;
-                    case 2:
-                        return loadFile.Element("CopyToClipboard").Value;
-                    case 3:
-                        return loadFile.Element("Depth").Value;
-                    case 4:
-                        return loadFile.Element("Scale").Value;
-                    case 5:
-                        return loadFile.Element("DecimalPlaces").Value;
-                    case 6:
-                        return loadFile.Element("Class").Value;
-                    case 7:
-                        return loadFile.Element("VisibleTexture").Value;
-                    case 8:
-                        return loadFile.Element("HiddenTexture").Value;
-                    case 9:
-                        return loadFile.Element("AxisAligned").Value;
-                    default:
-                        return "";
-                }
-            }
-            else
-                return "";
+			if (loadFile != null)
+			{
+				switch (mode)
+				{
+					case EFieldNames.MapOutput:
+						return loadFile.Element("MAPOutput").Value;
+					case EFieldNames.BrushMethod:
+						return loadFile.Element("BrushMethod").Value;
+					case EFieldNames.CopyToClipboard:
+						return loadFile.Element("CopyToClipboard").Value;
+					case EFieldNames.Depth:
+						return loadFile.Element("Depth").Value;
+					case EFieldNames.Scale:
+						return loadFile.Element("Scale").Value;
+					case EFieldNames.DecimalPlaces:
+						return loadFile.Element("DecimalPlaces").Value;
+					case EFieldNames.Class:
+						return loadFile.Element("Class").Value;
+					case EFieldNames.VisibleTexture:
+						return loadFile.Element("VisibleTexture").Value;
+					case EFieldNames.HiddenTexture:
+						return loadFile.Element("HiddenTexture").Value;
+					case EFieldNames.AxisAligned:
+						return loadFile.Element("AxisAligned").Value;
+				}
+			}
+
+			return "";
         }
     }
 }
