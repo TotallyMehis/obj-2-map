@@ -88,17 +88,15 @@ namespace OBJ2MAP
     {
         if(loadSettingFileCheckBox.Checked)
 		{
-            Console.Write("\n======> Path: " + openFileDialog.FileName);
+            //Console.Write("\n======> Path: " + openFileDialog.FileName);
             if (File.Exists(Path.Combine(Path.GetDirectoryName(openFileDialog.FileName), Path.GetFileNameWithoutExtension(openFileDialog.FileName) + ".xml")))
             {
-                SceneSettings sS = new SceneSettings(this);
-                sS.SetPathForLoading(openFileDialog.FileName);
+                SceneSettings.SetPathForLoading(openFileDialog.FileName);
+                this.MAPFilename.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.MapOutput);
+                //Console.Write("\n======> MAPPath: " + SceneSettings.SettingsLoad(SceneSettings.EFieldNames.MapOutput));
+                //Console.Write("\n======> Checkbox: " + SceneSettings.SettingsLoad(SceneSettings.EFieldNames.BrushMethod));
 
-                this.MAPFilename.Text = sS.SettingsLoad(SceneSettings.EFieldNames.MapOutput);
-                Console.Write("\n======> MAPPath: " + sS.SettingsLoad(SceneSettings.EFieldNames.MapOutput));
-				Console.Write("\n======> Checkbox: " + sS.SettingsLoad(SceneSettings.EFieldNames.BrushMethod));
-
-				switch (sS.SettingsLoad(SceneSettings.EFieldNames.BrushMethod))
+                switch (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.BrushMethod))
                 {
                     case "Spikes":
                         this.RB_Spikes.Checked = true;
@@ -111,19 +109,19 @@ namespace OBJ2MAP
                         break;
                 }
 
-				if (sS.SettingsLoad(SceneSettings.EFieldNames.CopyToClipboard) == "True")
+                if (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.CopyToClipboard) == "True")
                     this.CopyToClipboardCheck.Checked = true;
                 else
                     this.CopyToClipboardCheck.Checked = false;
 
-                this.DepthTextBox.Text = sS.SettingsLoad(SceneSettings.EFieldNames.Depth);
-				this.ScaleTextBox.Text = sS.SettingsLoad(SceneSettings.EFieldNames.Scale);
-				this.DecimalsTextBox.Text = sS.SettingsLoad(SceneSettings.EFieldNames.DecimalPlaces);
-				this.ClassTextBox.Text = sS.SettingsLoad(SceneSettings.EFieldNames.Class);
-				this.VisibleTextureTextBox.Text = sS.SettingsLoad(SceneSettings.EFieldNames.VisibleTexture);
-				this.HiddenTextureTextBox.Text = sS.SettingsLoad(SceneSettings.EFieldNames.HiddenTexture);
+                this.DepthTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Depth);
+                this.ScaleTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Scale);
+                this.DecimalsTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.DecimalPlaces);
+                this.ClassTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Class);
+                this.VisibleTextureTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.VisibleTexture);
+                this.HiddenTextureTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.HiddenTexture);
 
-				if (sS.SettingsLoad(SceneSettings.EFieldNames.AxisAligned) == "True")
+                if (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.AxisAligned) == "True")
                     this.AxisAlignedCheckBox.Checked = true;
                 else
                     this.AxisAlignedCheckBox.Checked = false;
@@ -178,7 +176,7 @@ namespace OBJ2MAP
       double _Scalar = double.Parse(this.DepthTextBox.Text);
       bool checked2 = this.AxisAlignedCheckBox.Checked;
       int num1 = Math.Max(int.Parse(this.DecimalsTextBox.Text), 0);
-      float num2 = float.Parse(this.ScaleTextBox.Text);
+      float mainScale = float.Parse(this.ScaleTextBox.Text);
       string str1 = this.VisibleTextureTextBox.Text;
       if (str1.Length == 0)
         str1 = "DEFAULT";
@@ -191,7 +189,7 @@ namespace OBJ2MAP
       {
         int num3 = (int) MessageBox.Show("OBJ file doesn't exist.");
       }
-      else if ((double) num2 <= 0.0)
+      else if ((double) mainScale <= 0.0)
       {
         int num4 = (int) MessageBox.Show("Scale needs to be above 0%.");
       }
@@ -230,58 +228,17 @@ namespace OBJ2MAP
         streamWriter1.WriteLine(string.Format("Method : {0}", (object) econvOption.ToString()));
         streamWriter1.WriteLine(string.Format("Copy To Clipboard : {0}", (object) checked3.ToString()));
         streamWriter1.WriteLine(string.Format("Depth: {0}", (object) _Scalar));
-        streamWriter1.WriteLine(string.Format("Scale: {0}", (object) num2));
+        streamWriter1.WriteLine(string.Format("Scale: {0}", (object) mainScale));
         streamWriter1.WriteLine(string.Format("Decimal Places: {0}", (object) num1));
         streamWriter1.WriteLine(string.Format("Class: {0}", text3.Length > 0 ? (object) text3 : (object) "worldspawn"));
         streamWriter1.WriteLine(string.Format("Visible Texture: {0}", str1.Length > 0 ? (object) str1 : (object) "DEFAULT"));
         streamWriter1.WriteLine(string.Format("Hidden Texture: {0}", str2.Length > 0 ? (object) str2 : (object) "SKIP"));
         streamWriter1.WriteLine("");
         streamWriter1.WriteLine("! Reading OBJ file into memory");
-        foreach (string str3 in File.ReadAllLines(text1))
-        {
-          string str4 = str3.Trim();
-          streamWriter1.WriteLine(string.Format("# OBJ Line: {0}", (object) str4));
-          if (!str4.StartsWith("# ") && str4.Length != 0)
-          {
-            if (egrp == MainForm.EGRP.Undefined && (str4.StartsWith("o ") || str4.StartsWith("g ")))
-              egrp = !str4.StartsWith("g ") ? MainForm.EGRP.Ungrouped : MainForm.EGRP.Grouped;
-            if (str4.StartsWith("g ") && egrp == MainForm.EGRP.Grouped || str4.StartsWith("o ") && egrp == MainForm.EGRP.Ungrouped)
-            {
-              if (list1.Count > 0)
-                list2.Add(new XBrush()
-                {
-                  Faces = list1
-                });
-              list1 = new List<XFace>();
-            }
-            if (str4.StartsWith("v "))
-            {
-              string[] strArray = str4.Split(separator1, StringSplitOptions.RemoveEmptyEntries);
-              if (strArray.Length == 4)
-              {
-                XVector xvector = new XVector(double.Parse(strArray[1],new CultureInfo("en-US")), double.Parse(strArray[2],new CultureInfo("en-US")), double.Parse(strArray[3],new CultureInfo("en-US")));
-                double num6 = xvector.y;
-                xvector.y = -xvector.z;
-                xvector.z = num6;
-                xvector.x *= (double) num2 / 100.0;
-                xvector.y *= (double) num2 / 100.0;
-                xvector.z *= (double) num2 / 100.0;
-                _Vertices.Add(xvector);
-              }
-            }
-            if (str4.StartsWith("f "))
-            {
-              XFace xface = new XFace();
-              string[] strArray1 = str4.Split(separator1, StringSplitOptions.RemoveEmptyEntries);
-              for (int index = 1; index < strArray1.Length; ++index)
-              {
-                string[] strArray2 = strArray1[index].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
-                xface.VertIdx.Add(int.Parse(strArray2[0]) - 1);
-              }
-              list1.Add(xface);
-            }
-          }
-        }
+
+        string[] fileLines = File.ReadAllLines(text1);
+        MAPCreation.LoadOBJ(fileLines, egrp, streamWriter1, ref _Vertices, ref list1, ref list2, mainScale, separator1, separator2);
+        
         if (list1.Count > 0)
           list2.Add(new XBrush()
           {
@@ -324,113 +281,9 @@ namespace OBJ2MAP
         }
         streamWriter1.WriteLine("! Beginning MAP construction.");
         string str5 = "" + "{\n" + string.Format("\"classname\" \"{0}\"\n", text3.Length > 0 ? (object) text3 : (object) "worldspawn");
-        switch (econvOption)
-        {
-          case MainForm.EConvOption.Extrusion:
-            using (List<XBrush>.Enumerator enumerator = list2.GetEnumerator())
-            {
-              while (enumerator.MoveNext())
-              {
-                foreach (XFace xface in enumerator.Current.Faces)
-                {
-                  XVector _B = XVector.Multiply(xface.Normal, _Scalar);
-                  List<XVector> list3 = new List<XVector>();
-                  List<XVector> list4 = new List<XVector>();
-                  foreach (int index in xface.VertIdx)
-                  {
-                    XVector _A = new XVector(_Vertices[index]);
-                    list3.Add(_A);
-                    list4.Add(XVector.Add(_A, _B));
-                  }
-                  str5 += "{\n";
-                  XVector xvector1 = list3[0];
-                  XVector xvector2 = list3[1];
-                  XVector xvector3 = list3[2];
-                  str5 += string.Format("\t( {0} {1} {2} ) ", (object)xvector1.x.ToString(format, new CultureInfo("en-US")), (object)xvector1.y.ToString(format, new CultureInfo("en-US")), (object)xvector1.z.ToString(format, new CultureInfo("en-US")));
-                  str5 += string.Format("( {0} {1} {2} ) ", (object)xvector3.x.ToString(format, new CultureInfo("en-US")), (object)xvector3.y.ToString(format, new CultureInfo("en-US")), (object)xvector3.z.ToString(format, new CultureInfo("en-US")));
-                  str5 += string.Format("( {0} {1} {2} ) {3} 0 0 0 1 1\n", (object)xvector2.x.ToString(format, new CultureInfo("en-US")), (object)xvector2.y.ToString(format, new CultureInfo("en-US")), (object)xvector2.z.ToString(format, new CultureInfo("en-US")), (object)str1);
-                  XVector xvector4 = list4[2];
-                  XVector xvector5 = list4[1];
-                  XVector xvector6 = list4[0];
-                  str5 += string.Format("\t( {0} {1} {2} ) ", (object)xvector4.x.ToString(format, new CultureInfo("en-US")), (object)xvector4.y.ToString(format, new CultureInfo("en-US")), (object)xvector4.z.ToString(format, new CultureInfo("en-US")));
-                  str5 += string.Format("( {0} {1} {2} ) ", (object)xvector6.x.ToString(format, new CultureInfo("en-US")), (object)xvector6.y.ToString(format, new CultureInfo("en-US")), (object)xvector6.z.ToString(format, new CultureInfo("en-US")));
-                  str5 += string.Format("( {0} {1} {2} ) {3} 0 0 0 1 1\n", (object)xvector5.x.ToString(format, new CultureInfo("en-US")), (object)xvector5.y.ToString(format, new CultureInfo("en-US")), (object)xvector5.z.ToString(format, new CultureInfo("en-US")), (object)str2);
-                  for (int index = 0; index < list3.Count; ++index)
-                  {
-                    XVector xvector7 = list3[index];
-                    XVector xvector8 = list3[(index + 1) % list3.Count];
-                    XVector xvector9 = list4[index];
-                    str5 += string.Format("\t( {0} {1} {2} ) ", (object)xvector7.x.ToString(format, new CultureInfo("en-US")), (object)xvector7.y.ToString(format, new CultureInfo("en-US")), (object)xvector7.z.ToString(format, new CultureInfo("en-US")));
-                    str5 += string.Format("( {0} {1} {2} ) ", (object)xvector8.x.ToString(format, new CultureInfo("en-US")), (object)xvector8.y.ToString(format, new CultureInfo("en-US")), (object)xvector8.z.ToString(format, new CultureInfo("en-US")));
-                    str5 += string.Format("( {0} {1} {2} ) {3} 0 0 0 1 1\n", (object)xvector9.x.ToString(format, new CultureInfo("en-US")), (object)xvector9.y.ToString(format, new CultureInfo("en-US")), (object)xvector9.z.ToString(format, new CultureInfo("en-US")), (object)str2);
-                  }
-                  str5 += "}\n";
-                }
-              }
-              break;
-            }
-          case MainForm.EConvOption.Spikes:
-            using (List<XBrush>.Enumerator enumerator = list2.GetEnumerator())
-            {
-              while (enumerator.MoveNext())
-              {
-                foreach (XFace xface in enumerator.Current.Faces)
-                {
-                  XVector _B1 = XVector.Multiply(xface.Normal, _Scalar);
-                  List<XVector> list3 = new List<XVector>();
-                  foreach (int index in xface.VertIdx)
-                  {
-                    XVector xvector = new XVector(_Vertices[index]);
-                    list3.Add(xvector);
-                  }
-                  str5 += "{\n";
-                  XVector xvector1 = list3[0];
-                  XVector xvector2 = list3[1];
-                  XVector xvector3 = list3[2];
-                  str5 += string.Format("\t( {0} {1} {2} ) ", (object)xvector1.x.ToString(format, new CultureInfo("en-US")), (object)xvector1.y.ToString(format, new CultureInfo("en-US")), (object)xvector1.z.ToString(format, new CultureInfo("en-US")));
-                  str5 += string.Format("( {0} {1} {2} ) ", (object)xvector3.x.ToString(format, new CultureInfo("en-US")), (object)xvector3.y.ToString(format, new CultureInfo("en-US")), (object)xvector3.z.ToString(format, new CultureInfo("en-US")));
-                  str5 += string.Format("( {0} {1} {2} ) {3} 0 0 0 1 1\n", (object)xvector2.x.ToString(format, new CultureInfo("en-US")), (object)xvector2.y.ToString(format, new CultureInfo("en-US")), (object)xvector2.z.ToString(format, new CultureInfo("en-US")), (object)str1);
-                  XVector xvector4 = new XVector();
-                  foreach (int index in xface.VertIdx)
-                  {
-                    XVector _B2 = new XVector(_Vertices[index]);
-                    xvector4 = XVector.Add(xvector4, _B2);
-                  }
-                  XVector xvector5 = XVector.Add(XVector.Divide(xvector4, (double) xface.VertIdx.Count), _B1);
-                  for (int index = 0; index < list3.Count; ++index)
-                  {
-                    XVector xvector6 = list3[index];
-                    XVector xvector7 = list3[(index + 1) % list3.Count];
-                    str5 += string.Format("\t( {0} {1} {2} ) ", (object)xvector5.x.ToString(format, new CultureInfo("en-US")), (object)xvector5.y.ToString(format, new CultureInfo("en-US")), (object)xvector5.z.ToString(format, new CultureInfo("en-US")));
-                    str5 += string.Format("( {0} {1} {2} ) ", (object)xvector6.x.ToString(format, new CultureInfo("en-US")), (object)xvector6.y.ToString(format, new CultureInfo("en-US")), (object)xvector6.z.ToString(format, new CultureInfo("en-US")));
-                    str5 += string.Format("( {0} {1} {2} ) {3} 0 0 0 1 1\n", (object)xvector7.x.ToString(format, new CultureInfo("en-US")), (object)xvector7.y.ToString(format, new CultureInfo("en-US")), (object)xvector7.z.ToString(format, new CultureInfo("en-US")), (object)str2);
-                  }
-                  str5 += "}\n";
-                }
-              }
-              break;
-            }
-          default:
-            using (List<XBrush>.Enumerator enumerator = list2.GetEnumerator())
-            {
-              while (enumerator.MoveNext())
-              {
-                XBrush current = enumerator.Current;
-                str5 += "{\n";
-                foreach (XFace xface in current.Faces)
-                {
-                  XVector xvector1 = _Vertices[xface.VertIdx[0]];
-                  XVector xvector2 = _Vertices[xface.VertIdx[2]];
-                  XVector xvector3 = _Vertices[xface.VertIdx[1]];
-                  str5 += string.Format("\t( {0} {1} {2} ) ", (object)xvector1.x.ToString(format, new CultureInfo("en-US")), (object)xvector1.y.ToString(format, new CultureInfo("en-US")), (object)xvector1.z.ToString(format, new CultureInfo("en-US")));
-                  str5 += string.Format("( {0} {1} {2} ) ", (object)xvector2.x.ToString(format, new CultureInfo("en-US")), (object)xvector2.y.ToString(format, new CultureInfo("en-US")), (object)xvector2.z.ToString(format, new CultureInfo("en-US")));
-                  str5 += string.Format("( {0} {1} {2} ) {3} 0 0 0 1 1\n", (object)xvector3.x.ToString(format, new CultureInfo("en-US")), (object)xvector3.y.ToString(format, new CultureInfo("en-US")), (object)xvector3.z.ToString(format, new CultureInfo("en-US")), (object)str1);
-                }
-                str5 += "}\n";
-              }
-              break;
-            }
-        }
+
+        MAPCreation.AddBrushesToMAP(econvOption, _Vertices, list1, list2, format, ref str5, str1, str2, _Scalar);
+        
         string text4 = str5 + "}\n";
         if (streamWriter2 != null)
         {
@@ -443,9 +296,9 @@ namespace OBJ2MAP
           Clipboard.SetText(text4);
         }
 
-        SceneSettings sS = new SceneSettings(this);
+        //SceneSettings sS = new SceneSettings(this);
 
-        bool saveDone = sS.SettingsSave(this.MAPFilename.Text,econvOption,checked3,_Scalar,num2,num1,text3,str1,str2,text1,this.AxisAlignedCheckBox.Checked);
+        bool saveDone = SceneSettings.SettingsSave(this.MAPFilename.Text, econvOption, checked3, _Scalar, mainScale, num1, text3, str1, str2, text1, this.AxisAlignedCheckBox.Checked);
 
         string str6 = "Done!" + "\n\n" + string.Format("\"{0}\" converted successfully.\n", (object)text1) + "\n";
         if (text2.Length > 0)

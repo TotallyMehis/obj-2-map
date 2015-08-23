@@ -55,6 +55,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MAPCreation.cs" />
     <Compile Include="SceneSettings.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

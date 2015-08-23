@@ -34,7 +34,7 @@ namespace OBJ2MAP
             progForm = form;
         }
 
-        public bool SettingsSave(
+        public static bool SettingsSave(
             string output,
             MainForm.EConvOption econvOption,
             bool checked3,
@@ -66,14 +66,14 @@ namespace OBJ2MAP
             return true;
         }
 
-        private XElement loadFile;
+        static XElement loadFile;
 
-        public void SetPathForLoading(string text1)
+        public static void SetPathForLoading(string text1)
         {
             loadFile = XElement.Load(Path.Combine(Path.GetDirectoryName(text1), Path.GetFileNameWithoutExtension(text1) + ".xml"));
         }
 
-		public string SettingsLoad(EFieldNames mode)
+		public static string SettingsLoad(EFieldNames mode)
         {
 			if (loadFile != null)
 			{
