@@ -316,7 +316,7 @@ namespace OBJ2MAP
 					streamWriter2.Write(text4);
 					streamWriter2.Close();
 				}
-				if (bCopyToClipboard)
+				if ( bCopyToClipboard )
 				{
 					Clipboard.Clear();
 					Clipboard.SetText(text4);
