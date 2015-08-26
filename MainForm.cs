@@ -24,308 +24,343 @@ using System.Globalization;
 
 namespace OBJ2MAP
 {
-  public class MainForm : Form
-  {
-    private IContainer components = (IContainer) null;
-    private GroupBox groupBox1;
-    private Button button1;
-    private TextBox OBJFilename;
-    private Label label1;
-    private GroupBox groupBox2;
-    private Button button2;
-    private TextBox MAPFilename;
-    private Label label2;
-    private TextBox DepthTextBox;
-    private GroupBox groupBox3;
-    private RadioButton RB_Spikes;
-    private RadioButton RB_Extrusion;
-    private RadioButton RB_Standard;
-    private Label DepthLabel;
-    private Button GOButton;
-    private CheckBox CopyToClipboardCheck;
-    private Label label4;
-    private TextBox ScaleTextBox;
-    private Label label3;
-    private Label label5;
-    private Label label7;
-    private TextBox ClassTextBox;
-    private Label label6;
-    private TextBox DecimalsTextBox;
-    private Label label8;
-    private TextBox VisibleTextureTextBox;
-    private Label label9;
-    private TextBox HiddenTextureTextBox;
-    private Label label10;
-    private CheckBox loadSettingFileCheckBox;
-    private CheckBox AxisAlignedCheckBox;
+	public class MainForm : Form
+	{
+		private IContainer components = (IContainer)null;
+		private GroupBox groupBox1;
+		private Button button1;
+		private TextBox OBJFilename;
+		private Label label1;
+		private GroupBox groupBox2;
+		private Button button2;
+		private TextBox MAPFilename;
+		private Label label2;
+		private TextBox DepthTextBox;
+		private GroupBox groupBox3;
+		private RadioButton RB_Spikes;
+		private RadioButton RB_Extrusion;
+		private RadioButton RB_Standard;
+		private Label DepthLabel;
+		private Button GOButton;
+		private CheckBox CopyToClipboardCheck;
+		private Label label4;
+		private TextBox ScaleTextBox;
+		private Label label3;
+		private Label label5;
+		private Label label7;
+		private TextBox ClassTextBox;
+		private Label label6;
+		private TextBox DecimalsTextBox;
+		private Label label8;
+		private TextBox VisibleTextureTextBox;
+		private Label label9;
+		private TextBox HiddenTextureTextBox;
+		private Label label10;
+		private Label ProgressLabel;
+		private ProgressBar ProgressBar;
+		private CheckBox AxisAlignedCheckBox;
 
-    public MainForm()
-    {
-      this.InitializeComponent();
-    }
-
-    private void MenuFileOpen_Click(object sender, EventArgs e)
-    {
-    }
-
-    static OpenFileDialog openFileDialog;
-
-    private void OBJBrowse_Click(object sender, EventArgs e)
-    {
-      //OpenFileDialog openFileDialog = new OpenFileDialog();
-      openFileDialog = new OpenFileDialog();
-      openFileDialog.Title = "Select OBJ File To Convert";
-      openFileDialog.Filter = "OBJ files (*.obj)|*.obj|All files (*.*)|*.*";
-      openFileDialog.FilterIndex = 1;
-      openFileDialog.RestoreDirectory = true;
-      openFileDialog.FileOk += openFileDialog_FileOk;
-      if (openFileDialog.ShowDialog() != DialogResult.OK)
-        return;
-      this.OBJFilename.Text = openFileDialog.FileName;
-    }
-
-    private void openFileDialog_FileOk(Object sender, CancelEventArgs e)
-    {
-        if(loadSettingFileCheckBox.Checked)
+		public MainForm()
 		{
-            //Console.Write("\n======> Path: " + openFileDialog.FileName);
-            if (File.Exists(Path.Combine(Path.GetDirectoryName(openFileDialog.FileName), Path.GetFileNameWithoutExtension(openFileDialog.FileName) + ".xml")))
-            {
-                SceneSettings.SetPathForLoading(openFileDialog.FileName);
-                this.MAPFilename.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.MapOutput);
-                //Console.Write("\n======> MAPPath: " + SceneSettings.SettingsLoad(SceneSettings.EFieldNames.MapOutput));
-                //Console.Write("\n======> Checkbox: " + SceneSettings.SettingsLoad(SceneSettings.EFieldNames.BrushMethod));
+			this.InitializeComponent();
+		}
 
-                switch (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.BrushMethod))
-                {
-                    case "Spikes":
-                        this.RB_Spikes.Checked = true;
-                        break;
-                    case "Standard":
-                        this.RB_Standard.Checked = true;
-                        break;
-                    case "Extrusion":
-                        this.RB_Extrusion.Checked = true;
-                        break;
-                }
+		private void MenuFileOpen_Click(object sender, EventArgs e)
+		{
+		}
 
-                if (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.CopyToClipboard) == "True")
-                    this.CopyToClipboardCheck.Checked = true;
-                else
-                    this.CopyToClipboardCheck.Checked = false;
+		static OpenFileDialog openFileDialog;
 
-                this.DepthTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Depth);
-                this.ScaleTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Scale);
-                this.DecimalsTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.DecimalPlaces);
-                this.ClassTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Class);
-                this.VisibleTextureTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.VisibleTexture);
-                this.HiddenTextureTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.HiddenTexture);
+		private void OBJBrowse_Click(object sender, EventArgs e)
+		{
+			openFileDialog = new OpenFileDialog();
+			openFileDialog.Title = "Select OBJ File To Convert";
+			openFileDialog.Filter = "OBJ files (*.obj)|*.obj|All files (*.*)|*.*";
+			openFileDialog.FilterIndex = 1;
+			openFileDialog.RestoreDirectory = true;
+			openFileDialog.FileOk += openFileDialog_FileOk;
+			if (openFileDialog.ShowDialog() == DialogResult.OK)
+			{
+				this.OBJFilename.Text = openFileDialog.FileName;
+			}
+		}
 
-                if (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.AxisAligned) == "True")
-                    this.AxisAlignedCheckBox.Checked = true;
-                else
-                    this.AxisAlignedCheckBox.Checked = false;
-            }
-        }
-    }
+		public void UpdateProgress( string _ProgressText = "" )
+		{
+			// Only update the progress label text if there's something there.  [performance]
+			if (_ProgressText.Length > 0)
+			{
+				ProgressLabel.Text = _ProgressText;
+			}
 
-    private void MAPBrowse_Click(object sender, EventArgs e)
-    {
-      OpenFileDialog openFileDialog = new OpenFileDialog();
-      openFileDialog.Title = "Select MAP File To Write Into";
-      openFileDialog.Filter = "MAP files (*.map)|*.map|All files (*.*)|*.*";
-      openFileDialog.FilterIndex = 1;
-      openFileDialog.RestoreDirectory = true;
-      openFileDialog.CheckFileExists = false;
-      if (openFileDialog.ShowDialog() != DialogResult.OK)
-        return;
-      this.MAPFilename.Text = openFileDialog.FileName;
-    }
+			// Allow the app to process events so the controls will get updated.  Otherwise, they won't paint until everything is done.
+			Application.DoEvents();
+		}
 
-    private void RB_Standard_CheckedChanged(object sender, EventArgs e)
-    {
-      this.DepthLabel.Enabled = false;
-      this.DepthTextBox.Enabled = false;
-      this.AxisAlignedCheckBox.Enabled = false;
-    }
+		private void openFileDialog_FileOk(Object sender, CancelEventArgs e)
+		{
+			if (File.Exists(Path.Combine(Path.GetDirectoryName(openFileDialog.FileName), Path.GetFileNameWithoutExtension(openFileDialog.FileName) + ".xml")))
+			{
+				SceneSettings.SetPathForLoading(openFileDialog.FileName);
+				this.MAPFilename.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.MapOutput);
 
-    private void RB_Extrusion_CheckedChanged(object sender, EventArgs e)
-    {
-      this.DepthLabel.Enabled = true;
-      this.DepthTextBox.Enabled = true;
-      this.AxisAlignedCheckBox.Enabled = true;
-    }
+				switch (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.BrushMethod))
+				{
+					case "Spikes":
+						this.RB_Spikes.Checked = true;
+						break;
+					case "Standard":
+						this.RB_Standard.Checked = true;
+						break;
+					case "Extrusion":
+						this.RB_Extrusion.Checked = true;
+						break;
+				}
 
-    private void RB_Spikes_CheckedChanged(object sender, EventArgs e)
-    {
-      this.DepthLabel.Enabled = true;
-      this.DepthTextBox.Enabled = true;
-      this.AxisAlignedCheckBox.Enabled = true;
-    }
+				if (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.CopyToClipboard) == "True")
+					this.CopyToClipboardCheck.Checked = true;
+				else
+					this.CopyToClipboardCheck.Checked = false;
 
-    private void GoButton_Click(object sender, EventArgs e)
-    {
-      string text1 = this.OBJFilename.Text;
-      string text2 = this.MAPFilename.Text;
-      bool checked1 = this.RB_Standard.Checked;
-      MainForm.EConvOption econvOption = MainForm.EConvOption.Standard;
-      if (this.RB_Extrusion.Checked)
-        econvOption = MainForm.EConvOption.Extrusion;
-      if (this.RB_Spikes.Checked)
-        econvOption = MainForm.EConvOption.Spikes;
-      double _Scalar = double.Parse(this.DepthTextBox.Text);
-      bool checked2 = this.AxisAlignedCheckBox.Checked;
-      int num1 = Math.Max(int.Parse(this.DecimalsTextBox.Text), 0);
-      float mainScale = float.Parse(this.ScaleTextBox.Text);
-      string str1 = this.VisibleTextureTextBox.Text;
-      if (str1.Length == 0)
-        str1 = "DEFAULT";
-      string str2 = this.HiddenTextureTextBox.Text;
-      if (str2.Length == 0)
-        str2 = "SKIP";
-      bool checked3 = this.CopyToClipboardCheck.Checked;
-      string text3 = this.ClassTextBox.Text;
-      if (!File.Exists(text1))
-      {
-        int num3 = (int) MessageBox.Show("OBJ file doesn't exist.");
-      }
-      else if ((double) mainScale <= 0.0)
-      {
-        int num4 = (int) MessageBox.Show("Scale needs to be above 0%.");
-      }
-      else if (econvOption != MainForm.EConvOption.Standard && _Scalar < 1.0)
-      {
-        int num5 = (int) MessageBox.Show("Depth must be greater than 0.");
-      }
-      else
-      {
-        StreamWriter streamWriter1 = new StreamWriter("OBJ2MAP.log");
-        streamWriter1.AutoFlush = true;
-        streamWriter1.WriteLine(">>> OBJ-2-MAP v1.1 starting up. <<<");
-        streamWriter1.WriteLine(string.Format("{0}", (object) DateTime.Now));
-        streamWriter1.WriteLine(string.Format("OBJ Filename : {0}", (object) text1));
-        StreamWriter streamWriter2 = (StreamWriter) null;
-        if (text2.Length > 0)
-        {
-          streamWriter2 = File.CreateText(text2);
-          streamWriter1.WriteLine(string.Format("MAP Filename : {0}", (object) text2));
-        }
-        MainForm.EGRP egrp = MainForm.EGRP.Undefined;
-        List<XVector> _Vertices = new List<XVector>();
-        List<XFace> list1 = new List<XFace>();
-        List<XBrush> list2 = new List<XBrush>();
-        char[] separator1 = new char[1]
-        {
-          ' '
-        };
-        char[] separator2 = new char[1]
-        {
-          '/'
-        };
+				this.DepthTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Depth);
+				this.ScaleTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Scale);
+				this.DecimalsTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.DecimalPlaces);
+				this.ClassTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.Class);
+				this.VisibleTextureTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.VisibleTexture);
+				this.HiddenTextureTextBox.Text = SceneSettings.SettingsLoad(SceneSettings.EFieldNames.HiddenTexture);
 
-        string format = string.Format("F{0}", (object) num1);
-        streamWriter1.WriteLine("");
-        streamWriter1.WriteLine(string.Format("Method : {0}", (object) econvOption.ToString()));
-        streamWriter1.WriteLine(string.Format("Copy To Clipboard : {0}", (object) checked3.ToString()));
-        streamWriter1.WriteLine(string.Format("Depth: {0}", (object) _Scalar));
-        streamWriter1.WriteLine(string.Format("Scale: {0}", (object) mainScale));
-        streamWriter1.WriteLine(string.Format("Decimal Places: {0}", (object) num1));
-        streamWriter1.WriteLine(string.Format("Class: {0}", text3.Length > 0 ? (object) text3 : (object) "worldspawn"));
-        streamWriter1.WriteLine(string.Format("Visible Texture: {0}", str1.Length > 0 ? (object) str1 : (object) "DEFAULT"));
-        streamWriter1.WriteLine(string.Format("Hidden Texture: {0}", str2.Length > 0 ? (object) str2 : (object) "SKIP"));
-        streamWriter1.WriteLine("");
-        streamWriter1.WriteLine("! Reading OBJ file into memory");
+				if (SceneSettings.SettingsLoad(SceneSettings.EFieldNames.AxisAligned) == "True")
+					this.AxisAlignedCheckBox.Checked = true;
+				else
+					this.AxisAlignedCheckBox.Checked = false;
+			}
+		}
 
-        string[] fileLines = File.ReadAllLines(text1);
-        MAPCreation.LoadOBJ(fileLines, egrp, streamWriter1, ref _Vertices, ref list1, ref list2, mainScale, separator1, separator2);
-        
-        if (list1.Count > 0)
-          list2.Add(new XBrush()
-          {
-            Faces = list1
-          });
-        streamWriter1.WriteLine("");
-        streamWriter1.WriteLine("Summary:");
-        streamWriter1.WriteLine(string.Format("Vertices: {0}", (object) _Vertices.Count));
-        streamWriter1.WriteLine(string.Format("Faces: {0}", (object) list1.Count));
-        streamWriter1.WriteLine(string.Format("Brushes: {0}", (object) list2.Count));
-        streamWriter1.WriteLine("");
-        streamWriter1.WriteLine("! Computing face normals.");
-        foreach (XFace xface in list1)
-        {
-          xface.ComputeNormal(ref _Vertices);
-          if (checked2)
-          {
-            XVector[] xvectorArray = new XVector[6]
-            {
-              new XVector(1.0, 0.0, 0.0),
-              new XVector(-1.0, 0.0, 0.0),
-              new XVector(0.0, 1.0, 0.0),
-              new XVector(0.0, -1.0, 0.0),
-              new XVector(0.0, 0.0, 1.0),
-              new XVector(0.0, 0.0, -1.0)
-            };
-            int index1 = -1;
-            double num6 = -999.0;
-            for (int index2 = 0; index2 < 6; ++index2)
-            {
-              double num7 = XVector.Dot(xvectorArray[index2], xface.Normal);
-              if (num7 > num6)
-              {
-                num6 = num7;
-                index1 = index2;
-              }
-            }
-            xface.Normal = xvectorArray[index1];
-          }
-        }
-        streamWriter1.WriteLine("! Beginning MAP construction.");
-        string str5 = "" + "{\n" + string.Format("\"classname\" \"{0}\"\n", text3.Length > 0 ? (object) text3 : (object) "worldspawn");
+		private void MAPBrowse_Click(object sender, EventArgs e)
+		{
+			OpenFileDialog openFileDialog = new OpenFileDialog();
+			openFileDialog.Title = "Select MAP File To Write Into";
+			openFileDialog.Filter = "MAP files (*.map)|*.map|All files (*.*)|*.*";
+			openFileDialog.FilterIndex = 1;
+			openFileDialog.RestoreDirectory = true;
+			openFileDialog.CheckFileExists = false;
+			if (openFileDialog.ShowDialog() != DialogResult.OK)
+			{
+				return;
+			}
+			this.MAPFilename.Text = openFileDialog.FileName;
+		}
 
-        MAPCreation.AddBrushesToMAP(econvOption, _Vertices, list1, list2, format, ref str5, str1, str2, _Scalar);
-        
-        string text4 = str5 + "}\n";
-        if (streamWriter2 != null)
-        {
-          streamWriter2.Write(text4);
-          streamWriter2.Close();
-        }
-        if (checked3)
-        {
-          Clipboard.Clear();
-          Clipboard.SetText(text4);
-        }
+		private void RB_Standard_CheckedChanged(object sender, EventArgs e)
+		{
+			this.DepthLabel.Enabled = false;
+			this.DepthTextBox.Enabled = false;
+			this.AxisAlignedCheckBox.Enabled = false;
+		}
 
-        //SceneSettings sS = new SceneSettings(this);
+		private void RB_Extrusion_CheckedChanged(object sender, EventArgs e)
+		{
+			this.DepthLabel.Enabled = true;
+			this.DepthTextBox.Enabled = true;
+			this.AxisAlignedCheckBox.Enabled = true;
+		}
 
-        bool saveDone = SceneSettings.SettingsSave(this.MAPFilename.Text, econvOption, checked3, _Scalar, mainScale, num1, text3, str1, str2, text1, this.AxisAlignedCheckBox.Checked);
+		private void RB_Spikes_CheckedChanged(object sender, EventArgs e)
+		{
+			this.DepthLabel.Enabled = true;
+			this.DepthTextBox.Enabled = true;
+			this.AxisAlignedCheckBox.Enabled = true;
+		}
 
-        string str6 = "Done!" + "\n\n" + string.Format("\"{0}\" converted successfully.\n", (object)text1) + "\n";
-        if (text2.Length > 0)
-          str6 += string.Format("Written to \"{0}\"", (object) text2);
-        string text5 = !checked3 ? str6 + "." : (text2.Length <= 0 ? str6 + "MAP text copied to the clipboard." : str6 + "and MAP text copied to the clipboard.");
-        streamWriter1.WriteLine(text5);
-        int num8 = (int) MessageBox.Show(text5);
-        streamWriter1.Close();
-      }
-    }
+		private void GoButton_Click(object sender, EventArgs e)
+		{
+			List<bool> SavedCtrlStates = new List<bool>();
 
-    private void MainForm_Load(object sender, EventArgs e)
-    {
-      this.OBJFilename.Focus();
-    }
+			foreach( Control C in Controls )
+			{
+				SavedCtrlStates.Add(C.Enabled);
+				C.Enabled = false;
+			}
 
-    protected override void Dispose(bool disposing)
-    {
-      if (disposing && this.components != null)
-        this.components.Dispose();
-      base.Dispose(disposing);
-    }
+			ProgressBar.Enabled = true;
+			ProgressLabel.Enabled = true;
 
-    private void InitializeComponent()
-    {
+			ProgressLabel.Show();
+			ProgressBar.Show();
+			GOButton.Hide();
+
+			UpdateProgress("Initializing...");
+
+			string OBJFilename = this.OBJFilename.Text;
+			string MAPFilename = this.MAPFilename.Text;
+			MainForm.EConvOption econvOption = MainForm.EConvOption.Standard;
+			if (this.RB_Extrusion.Checked)
+			{
+				econvOption = MainForm.EConvOption.Extrusion;
+			}
+			else if (this.RB_Spikes.Checked)
+			{
+				econvOption = MainForm.EConvOption.Spikes;
+			}
+			double Depth = double.Parse(this.DepthTextBox.Text);
+			bool bAxisAligned = this.AxisAlignedCheckBox.Checked;
+			int NumDecimals = Math.Max(int.Parse(this.DecimalsTextBox.Text), 0);
+			float ScaleFactor = float.Parse(this.ScaleTextBox.Text);
+			string VisibleTextureName = VisibleTextureTextBox.Text.Length > 0 ? VisibleTextureTextBox.Text : "DEFAULT";
+			string HiddenTextureName = HiddenTextureTextBox.Text.Length > 0 ? HiddenTextureTextBox.Text : "SKIP";
+			bool bCopyToClipboard = this.CopyToClipboardCheck.Checked;
+			string Classname = this.ClassTextBox.Text;
+
+			StreamWriter LogFile = new StreamWriter("OBJ2MAP.log");
+
+			// Error checking
+
+			if (!File.Exists(OBJFilename))
+			{
+				int num3 = (int)MessageBox.Show("OBJ file doesn't exist.");
+			}
+			else if ((double)ScaleFactor <= 0.0)
+			{
+				int num4 = (int)MessageBox.Show("Scale needs to be above 0%.");
+			}
+			else if (econvOption != MainForm.EConvOption.Standard && Depth < 1.0)
+			{
+				int num5 = (int)MessageBox.Show("Depth must be greater than 0.");
+			}
+			else
+			{
+				// Input looks good, let's go...
+
+				LogFile.AutoFlush = true;
+				LogFile.WriteLine(">>> OBJ-2-MAP v1.1 starting up. <<<");
+				LogFile.WriteLine(string.Format("{0}", (object)DateTime.Now));
+				LogFile.WriteLine(string.Format("OBJ Filename : {0}", (object)OBJFilename));
+				StreamWriter streamWriter2 = (StreamWriter)null;
+				if (MAPFilename.Length > 0)
+				{
+					streamWriter2 = File.CreateText(MAPFilename);
+					LogFile.WriteLine(string.Format("MAP Filename : {0}", (object)MAPFilename));
+				}
+				MainForm.EGRP egrp = MainForm.EGRP.Undefined;
+				List<XVector> _Vertices = new List<XVector>();
+				List<XFace> list1 = new List<XFace>();
+				List<XBrush> list2 = new List<XBrush>();
+				char[] separator1 = new char[1] { ' ' };
+				char[] separator2 = new char[1] { '/' };
+
+				string format = string.Format("F{0}", (object)NumDecimals);
+				LogFile.WriteLine("");
+				LogFile.WriteLine(string.Format("Method : {0}", (object)econvOption.ToString()));
+				LogFile.WriteLine(string.Format("Copy To Clipboard : {0}", (object)bCopyToClipboard.ToString()));
+				LogFile.WriteLine(string.Format("Depth: {0}", (object)Depth));
+				LogFile.WriteLine(string.Format("Scale: {0}", (object)ScaleFactor));
+				LogFile.WriteLine(string.Format("Decimal Places: {0}", (object)NumDecimals));
+				LogFile.WriteLine(string.Format("Class: {0}", Classname.Length > 0 ? (object)Classname : (object)"worldspawn"));
+				LogFile.WriteLine(string.Format("Visible Texture: {0}", VisibleTextureName.Length > 0 ? (object)VisibleTextureName : (object)"DEFAULT"));
+				LogFile.WriteLine(string.Format("Hidden Texture: {0}", HiddenTextureName.Length > 0 ? (object)HiddenTextureName : (object)"SKIP"));
+				LogFile.WriteLine("");
+				LogFile.WriteLine("! Reading OBJ file into memory");
+
+				string[] fileLines = File.ReadAllLines(OBJFilename);
+				MAPCreation.LoadOBJ(this, fileLines, egrp, LogFile, ref _Vertices, ref list1, ref list2, ScaleFactor, separator1, separator2);
+
+				if (list1.Count > 0)
+					list2.Add(new XBrush()
+					{
+						Faces = list1
+					});
+				LogFile.WriteLine("");
+				LogFile.WriteLine("Summary:");
+				LogFile.WriteLine(string.Format("Vertices: {0}", (object)_Vertices.Count));
+				LogFile.WriteLine(string.Format("Faces: {0}", (object)list1.Count));
+				LogFile.WriteLine(string.Format("Brushes: {0}", (object)list2.Count));
+				LogFile.WriteLine("");
+				LogFile.WriteLine("! Computing face normals.");
+				foreach (XFace xface in list1)
+				{
+					UpdateProgress("Processing Faces...");
+					xface.ComputeNormal(ref _Vertices);
+					if (bAxisAligned)
+					{
+						XVector[] AxisArray = new XVector[6]
+						{
+						  new XVector(1.0, 0.0, 0.0),
+						  new XVector(-1.0, 0.0, 0.0),
+						  new XVector(0.0, 1.0, 0.0),
+						  new XVector(0.0, -1.0, 0.0),
+						  new XVector(0.0, 0.0, 1.0),
+						  new XVector(0.0, 0.0, -1.0)
+						};
+						int index1 = -1;
+						double num6 = -999.0;
+						for (int index2 = 0; index2 < 6; ++index2)
+						{
+							double num7 = XVector.Dot(AxisArray[index2], xface.Normal);
+							if (num7 > num6)
+							{
+								num6 = num7;
+								index1 = index2;
+							}
+						}
+						xface.Normal = AxisArray[index1];
+					}
+				}
+				LogFile.WriteLine("! Beginning MAP construction.");
+				string str5 = "" + "{\n" + string.Format("\"classname\" \"{0}\"\n", Classname.Length > 0 ? (object)Classname : (object)"worldspawn");
+
+				MAPCreation.AddBrushesToMAP(this,econvOption, _Vertices, list1, list2, format, ref str5, VisibleTextureName, HiddenTextureName, Depth);
+
+				string text4 = str5 + "}\n";
+				if (streamWriter2 != null)
+				{
+					streamWriter2.Write(text4);
+					streamWriter2.Close();
+				}
+				if (bCopyToClipboard)
+				{
+					Clipboard.Clear();
+					Clipboard.SetText(text4);
+				}
+
+				SceneSettings.SettingsSave(this.MAPFilename.Text, econvOption, bCopyToClipboard, Depth, ScaleFactor, NumDecimals, Classname, VisibleTextureName, HiddenTextureName, OBJFilename, this.AxisAlignedCheckBox.Checked);
+			}
+
+			int SCSIdx = 0;
+
+			foreach (Control C in Controls)
+			{
+				C.Enabled = SavedCtrlStates[ SCSIdx++ ];
+			}
+
+			UpdateProgress(" ");
+			ProgressLabel.Hide();
+			ProgressBar.Hide();
+			GOButton.Show();
+
+			string str6 = "Done!" + "\n\n" + string.Format("\"{0}\" converted successfully.\n", (object)OBJFilename) + "\n";
+			if (MAPFilename.Length > 0)
+				str6 += string.Format("Written to \"{0}\"", (object)MAPFilename);
+			string FinishMsg = !bCopyToClipboard ? str6 + "." : (MAPFilename.Length <= 0 ? str6 + "MAP text copied to the clipboard." : str6 + "and MAP text copied to the clipboard.");
+			LogFile.WriteLine(FinishMsg);
+			MessageBox.Show(FinishMsg);
+			LogFile.Close();
+		}
+
+		private void MainForm_Load(object sender, EventArgs e)
+		{
+			this.OBJFilename.Focus();
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing && this.components != null)
+				this.components.Dispose();
+			base.Dispose(disposing);
+		}
+
+		private void InitializeComponent()
+		{
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
-			this.loadSettingFileCheckBox = new System.Windows.Forms.CheckBox();
 			this.button1 = new System.Windows.Forms.Button();
 			this.OBJFilename = new System.Windows.Forms.TextBox();
 			this.label1 = new System.Windows.Forms.Label();
@@ -355,6 +390,8 @@ namespace OBJ2MAP
 			this.MAPFilename = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
 			this.GOButton = new System.Windows.Forms.Button();
+			this.ProgressLabel = new System.Windows.Forms.Label();
+			this.ProgressBar = new System.Windows.Forms.ProgressBar();
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.groupBox3.SuspendLayout();
@@ -362,32 +399,16 @@ namespace OBJ2MAP
 			// 
 			// groupBox1
 			// 
-			this.groupBox1.Controls.Add(this.loadSettingFileCheckBox);
 			this.groupBox1.Controls.Add(this.button1);
 			this.groupBox1.Controls.Add(this.OBJFilename);
 			this.groupBox1.Controls.Add(this.label1);
 			this.groupBox1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
 			this.groupBox1.Location = new System.Drawing.Point(12, 12);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(436, 78);
+			this.groupBox1.Size = new System.Drawing.Size(436, 58);
 			this.groupBox1.TabIndex = 0;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "INPUT";
-			// 
-			// loadSettingFileCheckBox
-			// 
-			this.loadSettingFileCheckBox.Checked = true;
-			this.loadSettingFileCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.loadSettingFileCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.loadSettingFileCheckBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.loadSettingFileCheckBox.ForeColor = System.Drawing.SystemColors.ControlText;
-			this.loadSettingFileCheckBox.Location = new System.Drawing.Point(9, 48);
-			this.loadSettingFileCheckBox.Name = "loadSettingFileCheckBox";
-			this.loadSettingFileCheckBox.Size = new System.Drawing.Size(181, 24);
-			this.loadSettingFileCheckBox.TabIndex = 6;
-			this.loadSettingFileCheckBox.Text = "Load setting file";
-			this.loadSettingFileCheckBox.UseCompatibleTextRendering = true;
-			this.loadSettingFileCheckBox.CheckedChanged += new System.EventHandler(this.loadSettingFileCheckBox_CheckedChanged);
 			// 
 			// button1
 			// 
@@ -437,7 +458,7 @@ namespace OBJ2MAP
 			this.groupBox2.Controls.Add(this.MAPFilename);
 			this.groupBox2.Controls.Add(this.label2);
 			this.groupBox2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.groupBox2.Location = new System.Drawing.Point(12, 96);
+			this.groupBox2.Location = new System.Drawing.Point(12, 75);
 			this.groupBox2.Name = "groupBox2";
 			this.groupBox2.Size = new System.Drawing.Size(436, 248);
 			this.groupBox2.TabIndex = 1;
@@ -690,20 +711,44 @@ namespace OBJ2MAP
 			this.GOButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
 			this.GOButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.GOButton.ForeColor = System.Drawing.SystemColors.ButtonFace;
-			this.GOButton.Location = new System.Drawing.Point(12, 350);
+			this.GOButton.Location = new System.Drawing.Point(12, 329);
 			this.GOButton.Name = "GOButton";
-			this.GOButton.Size = new System.Drawing.Size(436, 42);
+			this.GOButton.Size = new System.Drawing.Size(436, 52);
 			this.GOButton.TabIndex = 2;
 			this.GOButton.Text = "GO!";
 			this.GOButton.UseVisualStyleBackColor = false;
 			this.GOButton.Click += new System.EventHandler(this.GoButton_Click);
 			// 
+			// ProgressLabel
+			// 
+			this.ProgressLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.ProgressLabel.Location = new System.Drawing.Point(12, 330);
+			this.ProgressLabel.Name = "ProgressLabel";
+			this.ProgressLabel.Size = new System.Drawing.Size(436, 27);
+			this.ProgressLabel.TabIndex = 3;
+			this.ProgressLabel.Text = "Working...";
+			this.ProgressLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			this.ProgressLabel.Visible = false;
+			// 
+			// ProgressBar
+			// 
+			this.ProgressBar.Location = new System.Drawing.Point(15, 358);
+			this.ProgressBar.Name = "ProgressBar";
+			this.ProgressBar.Size = new System.Drawing.Size(433, 23);
+			this.ProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+			this.ProgressBar.TabIndex = 4;
+			this.ProgressBar.Visible = false;
+			// 
 			// MainForm
 			// 
-			this.ClientSize = new System.Drawing.Size(460, 405);
+			this.ClientSize = new System.Drawing.Size(460, 392);
+			this.Controls.Add(this.ProgressBar);
+			this.Controls.Add(this.ProgressLabel);
 			this.Controls.Add(this.GOButton);
 			this.Controls.Add(this.groupBox2);
 			this.Controls.Add(this.groupBox1);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
 			this.MaximizeBox = false;
 			this.Name = "MainForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -717,30 +762,30 @@ namespace OBJ2MAP
 			this.groupBox3.PerformLayout();
 			this.ResumeLayout(false);
 
-    }
+		}
 
-    public enum EGRP
-    {
-      Undefined,
-      Grouped,
-      Ungrouped,
-    }
+		public enum EGRP
+		{
+			Undefined,
+			Grouped,
+			Ungrouped,
+		}
 
-    public enum EConvOption
-    {
-      Standard,
-      Extrusion,
-      Spikes,
-    }
+		public enum EConvOption
+		{
+			Standard,
+			Extrusion,
+			Spikes,
+		}
 
-    private void loadSettingFileCheckBox_CheckedChanged(object sender, EventArgs e)
-    {
+		private void loadSettingFileCheckBox_CheckedChanged(object sender, EventArgs e)
+		{
 
-    }
+		}
 
-    private void CopyToClipboardCheck_CheckedChanged(object sender, EventArgs e)
-    {
+		private void CopyToClipboardCheck_CheckedChanged(object sender, EventArgs e)
+		{
 
-    }
-  }
+		}
+	}
 }
