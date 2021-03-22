@@ -308,6 +308,18 @@ namespace OBJ2MAP
 				LogFile.WriteLine("! Beginning MAP construction.");
 				string str5 = "" + "{\n" + string.Format("\"classname\" \"{0}\"\n", Classname.Length > 0 ? (object)Classname : (object)"worldspawn");
 
+				// HACK: Fix for crash.
+				foreach (var brush in list2)
+				{
+					foreach (var face in brush.Faces)
+					{
+						if (face.Normal == null)
+						{
+							face.ComputeNormal(ref _Vertices);
+						}
+					}
+				}
+
 				MAPCreation.AddBrushesToMAP(this,econvOption, _Vertices, list1, list2, format, ref str5, VisibleTextureName, HiddenTextureName, Depth);
 
 				string text4 = str5 + "}\n";
